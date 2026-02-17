@@ -59,7 +59,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 				<button type="submit">Generate Smart Links</button>
 			</form>
 
-			<p style="margin-top: 40px; font-size: 0.9em;">Built to promote Bino – try detailed queries for the best results!</p>
+			<p style="margin-top: 40px; font-size: 0.9em;">Built to promote Boni – try detailed queries for the best results!</p>
 		</body>
 		</html>
 	`)
@@ -92,7 +92,7 @@ func generateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	prompt := fmt.Sprintf(`You are an expert at creating effective search queries for Bino, a WhatsApp-based local search service in Bangalore.
+	prompt := fmt.Sprintf(`You are an expert at creating effective search queries for Boni, a WhatsApp-based local search service in Bangalore.
 User input: "%s"
 Generate 5 natural, detailed, hyper-local queries that maximize better deals/results (include urgency, budget, location, preferences where relevant).
 Output ONLY a numbered list like:
@@ -109,7 +109,6 @@ No extra text.`, need)
 	}
 
 	fmt.Println("DEBUG: Raw AI response:", response) // Check what came back
-
 	// Flexible parsing
 	variations := []string{}
 	lines := strings.Split(response, "\n")
@@ -147,7 +146,7 @@ No extra text.`, need)
 			<style>body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; } ul { list-style-type: none; padding: 0; } li { margin: 15px 0; font-size: 1.1em; } a { color: #0066cc; }</style>
 		</head>
 		<body>
-			<h1>Your Smart Queries for Bino</h1>
+			<h1>Your Smart Queries for Boni</h1>
 			<p>Original: <strong>`+need+`</strong></p>
 			<p>Click to send to WhatsApp:</p>
 			<ul>
@@ -162,7 +161,7 @@ No extra text.`, need)
 	fmt.Fprint(w, `
 			</ul>
 			<p><a href="/">Back</a></p>
-			<p style="font-size:0.9em;">Powered by AI (OpenRouter) for better Bino searches!</p>
+			<p style="font-size:0.9em;">Powered by AI (OpenRouter) for better Boni searches!</p>
 		</body>
 		</html>
 	`)
