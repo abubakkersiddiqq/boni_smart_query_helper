@@ -31,7 +31,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 		<html lang="en">
 		<head>
 			<meta charset="UTF-8">
-			<title>Bino Smart Query Helper</title>
+			<title>Boni Smart Query Helper</title>
 			<style>
 				body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
 				input { padding: 10px; width: 300px; }
@@ -44,7 +44,7 @@ func homeHandler(w http.ResponseWriter, r *http.Request) {
 			</style>
 		</head>
 		<body>
-			<h1>Bino Smart Query Helper 🚀</h1>
+			<h1>Boni Smart Query Helper 🚀</h1>
 			<p>Message <strong>+91 98000 81110</strong> on WhatsApp with detailed queries to get better, faster deals from competing vendors in Bangalore!</p>
 			<p>Examples of smart queries (click to try):</p>
 			<ul>
@@ -143,7 +143,7 @@ No extra text.`, need)
 		<html lang="en">
 		<head>
 			<meta charset="UTF-8">
-			<title>Your Smart Bino Queries</title>
+			<title>Your Smart Boni Queries</title>
 			<style>body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; } ul { list-style-type: none; padding: 0; } li { margin: 15px 0; font-size: 1.1em; } a { color: #0066cc; }</style>
 		</head>
 		<body>
