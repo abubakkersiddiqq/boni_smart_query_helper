@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,7 +14,27 @@ import (
 	"github.com/tmc/langchaingo/llms/openai"
 )
 
+var (
+	homeTmpl    *template.Template
+	resultsTmpl *template.Template
+)
+
 func main() {
+	var err error
+
+	homeTmpl, err = template.ParseFiles("templates/home.html")
+	if err != nil {
+		log.Fatal("Failed to parse home.html:", err)
+	}
+
+	resultsTmpl, err = template.ParseFiles("templates/results.html")
+	if err != nil {
+		log.Fatal("Failed to parse results.html:", err)
+	}
+
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/static/", http.StripPrefix("/static/", fs))
+
 	http.HandleFunc("/", homeHandler)
 	http.HandleFunc("/generate", generateHandler)
 
@@ -20,49 +42,23 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
-	fmt.Printf("Server starting → open http://localhost:%s\n", port)
-
-
-	http.ListenAndServe("0.0.0.0:"+port, nil)
+	log.Printf("Server starting → open http://localhost:%s\n", port)
+	log.Fatal(http.ListenAndServe("0.0.0.0:"+port, nil))
 }
+
 func homeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w, `
-		<!DOCTYPE html>
-		<html lang="en">
-		<head>
-			<meta charset="UTF-8">
-			<title>Boni Smart Query Helper</title>
-			<style>
-				body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
-				input { padding: 10px; width: 300px; }
-				button { padding: 10px 20px; background: #4CAF50; color: white; border: none; cursor: pointer; }
-				button:hover { background: #45a049; }
-				ul { list-style-type: none; padding: 0; }
-				li { margin: 10px 0; }
-				a { color: #0066cc; text-decoration: none; }
-				a:hover { text-decoration: underline; }
-			</style>
-		</head>
-		<body>
-			<h1>Boni Smart Query Helper 🚀</h1>
-			<p>Message <strong>+91 98000 81110</strong> on WhatsApp with detailed queries to get better, faster deals from competing vendors in Bangalore!</p>
-			<p>Examples of smart queries (click to try):</p>
-			<ul>
-				<li><a href="https://wa.me/919800081110?text=Haircut%20in%20Koramangala%20under%20500%20today" target="_blank">Haircut in Koramangala under 500 today</a></li>
-				<li><a href="https://wa.me/919800081110?text=Urgent%20AC%20repair%20Indiranagar%20same%20day%20best%20price" target="_blank">Urgent AC repair Indiranagar same day best price</a></li>
-				<li><a href="https://wa.me/919800081110?text=Cheap%20flight%20to%20Goa%20from%20Bangalore%20this%20weekend" target="_blank">Cheap flight to Goa from Bangalore this weekend</a></li>
-			</ul>
+	if err := homeTmpl.Execute(w, nil); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+}
 
-			<h2>Make your own smart query:</h2>
-			<form method="GET" action="/generate">
-				<input type="text" name="need" placeholder="e.g. plumber Whitefield or biryani MG Road" required>
-				<button type="submit">Generate Smart Links</button>
-			</form>
-
-			<p style="margin-top: 40px; font-size: 0.9em;">Built to promote Boni – try detailed queries for the best results!</p>
-		</body>
-		</html>
-	`)
+// ResultsData struct for template
+type ResultsData struct {
+	Need       string
+	Variations []struct {
+		Query string
+		Link  string
+	}
 }
 
 func generateHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,26 +69,25 @@ func generateHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	apiKey := os.Getenv("OPENROUTER_API_KEY")
-	fmt.Println("DEBUG: API Key loaded?", apiKey != "") // Check terminal
-	fmt.Println("DEBUG: User input:", need)
+	log.Printf("DEBUG: API Key loaded? %v", apiKey != "")
 
 	if apiKey == "" {
-		fmt.Fprint(w, "<h2>Error: OPENROUTER_API_KEY not set!</h2><p>Run in terminal: export OPENROUTER_API_KEY=sk-or-v1-...</p><a href='/'>Back</a>")
+		fmt.Fprint(w, "<h2>Error: OPENROUTER_API_KEY not set!</h2><a href='/'>Back</a>")
 		return
 	}
 
 	llm, err := openai.New(
 		openai.WithToken(apiKey),
 		openai.WithBaseURL("https://openrouter.ai/api/v1"),
-		openai.WithModel("openrouter/free"), // Change to another :free model if rate-limited
+		openai.WithModel("openrouter/free"),
 	)
 	if err != nil {
+		log.Printf("LLM Init Error: %v", err)
 		fmt.Fprintf(w, "<h2>LLM Init Error: %v</h2><a href='/'>Back</a>", err)
-		fmt.Println("DEBUG: Init error:", err)
 		return
 	}
 
-	prompt := fmt.Sprintf(`You are an expert at creating effective search queries for Boni, a WhatsApp-based local search service in Bangalore.
+	prompt := fmt.Sprintf(`You are an expert at creating effective search queries for Bino, a WhatsApp-based local search service in Bangalore.
 User input: "%s"
 Generate 5 natural, detailed, hyper-local queries that maximize better deals/results (include urgency, budget, location, preferences where relevant).
 Output ONLY a numbered list like:
@@ -101,15 +96,16 @@ Output ONLY a numbered list like:
 No extra text.`, need)
 
 	ctx := context.Background()
-	response, err := llms.GenerateFromSinglePrompt(ctx, llm, prompt) // <-- FIXED: Use llms. prefix + pass llm as arg
+	response, err := llms.GenerateFromSinglePrompt(ctx, llm, prompt)
 	if err != nil {
+		log.Printf("Generate error: %v", err)
 		fmt.Fprintf(w, "<h2>Generation Error: %v</h2><a href='/'>Back</a>", err)
-		fmt.Println("DEBUG: Generate error:", err)
 		return
 	}
 
-	fmt.Println("DEBUG: Raw AI response:", response) // Check what came back
-	// Flexible parsing
+	log.Printf("Raw AI response: %s", response)
+
+	// Parse variations
 	variations := []string{}
 	lines := strings.Split(response, "\n")
 	for _, line := range lines {
@@ -117,7 +113,6 @@ No extra text.`, need)
 		if line == "" {
 			continue
 		}
-		// Remove number/dot/space or dashes
 		line = strings.TrimLeft(line, "12345.-* ")
 		line = strings.TrimSpace(line)
 		if line != "" {
@@ -125,44 +120,32 @@ No extra text.`, need)
 		}
 	}
 
-	// Fallback
 	if len(variations) == 0 {
 		variations = []string{
 			need + " urgent today Bangalore",
 			need + " best price low cost",
 			need + " near me same day",
-			need + " top rated",
-			need + " cheap and good",
 		}
 	}
 
-	// Results page
-	fmt.Fprint(w, `
-		<!DOCTYPE html>
-		<html lang="en">
-		<head>
-			<meta charset="UTF-8">
-			<title>Your Smart Boni Queries</title>
-			<style>body { font-family: Arial; max-width: 800px; margin: 0 auto; padding: 20px; } ul { list-style-type: none; padding: 0; } li { margin: 15px 0; font-size: 1.1em; } a { color: #0066cc; }</style>
-		</head>
-		<body>
-			<h1>Your Smart Queries for Boni</h1>
-			<p>Original: <strong>`+need+`</strong></p>
-			<p>Click to send to WhatsApp:</p>
-			<ul>
-	`)
+	// Prepare data for template
+	data := ResultsData{
+		Need: need,
+	}
 
 	for _, q := range variations {
 		encoded := url.QueryEscape(q)
 		link := "https://wa.me/919800081110?text=" + encoded
-		fmt.Fprintf(w, `<li><a href="%s" target="_blank">%s</a></li>`, link, q)
+		data.Variations = append(data.Variations, struct {
+			Query string
+			Link  string
+		}{Query: q, Link: link})
 	}
 
-	fmt.Fprint(w, `
-			</ul>
-			<p><a href="/">Back</a></p>
-			<p style="font-size:0.9em;">Powered by AI (OpenRouter) for better Boni searches!</p>
-		</body>
-		</html>
-	`)
+	// Execute the template with data
+	if err := resultsTmpl.Execute(w, data); err != nil {
+		log.Printf("Template execute error: %v", err)
+		http.Error(w, "Template error", http.StatusInternalServerError)
+		return
+	}
 }
