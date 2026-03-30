@@ -2,7 +2,7 @@
 
 A simple web tool that helps users create better, more detailed queries for Bino (WhatsApp-based local search service).
 
-Type a need (e.g. "hospital", "haircut Koramangala") → get 5 optimized suggestions → click to send directly via WhatsApp to +91 98000 81110.
+Type a need (e.g. "restaurant","hospital", "haircut Koramangala") → get 5 optimized suggestions → click to send directly via WhatsApp to +91 98000 81110.
 
 **Live:** https://bino-smart-query-helper.onrender.com
 
