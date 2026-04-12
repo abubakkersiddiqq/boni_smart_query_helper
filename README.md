@@ -4,6 +4,10 @@ A simple web tool that helps users create better, more detailed queries for Bino
 
 Type a need (e.g. "restaurant","hospital", "haircut Koramangala") → get 5 optimized suggestions → click to send directly via WhatsApp to +91 98000 81110.
 
+> 🚧 **Note:** The live link may be down. This project is hosted on Render's
+> free tier (750hr/month limit). If the demo doesn't load, it's likely
+> suspended. Feel free to run it locally using the instructions below.
+
 **Live:** https://bino-smart-query-helper.onrender.com
 
 ## Features
