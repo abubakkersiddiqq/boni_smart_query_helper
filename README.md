@@ -6,7 +6,7 @@ Type a need (e.g. "restaurant", "hospital", "haircut Koramangala") → get 5 opt
 
 ## Live
 
-[Bino Smart Query Helper](https://binosmartqueryhelper-production.up.railway.app/)
+[Bino Smart Query Helper](https://bino-smart-query-helper.onrender.com/)
 
 ## Features
 
